@@ -19,8 +19,9 @@ react {
         my $writer = Supply.interval($delay).tap: { $conn.print: (^2**64).pick.base(16) ~ "\r\n" }
 
         whenever $conn.Supply {
-            LAST { note "[INFO] Victim released after {(now - $start).fmt('%.2f')}s ({--⚛$active}/$max-clients)"; $conn.close; $writer.close }
-            QUIT { default { say "[ERR]  $addr: {.message} after {(now - $start).fmt('%.2f')}s" }}
+            my &clean = { $conn.close; $writer.close; --⚛$active; };
+            LAST { note "[INFO] Victim released after {(now - $start).fmt('%.2f')}s ({$active}/$max-clients)"; clean }
+            QUIT { default { say "[ERR]  $addr: {.message} after {(now - $start).fmt('%.2f')}s"; clean }}
         }
     }
     whenever signal(SIGINT) { say "\rBye !"; exit }
