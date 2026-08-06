@@ -11,11 +11,11 @@ my atomicint $active = 0;
 react {
     whenever IO::Socket::Async.listen($addr, $port) -> $conn {
         my $start = now;
-	my $addr  = "{$conn.peer-host}:{$conn.peer-port}";
-	
-	note "[WARN] Dropped $addr (at capacity $max-clients)" and $conn.close and next if $active >= $max-clients;
+        my $addr  = "{$conn.peer-host}:{$conn.peer-port}";
+        
+        note "[WARN] Dropped $addr (at capacity $max-clients)" and $conn.close and next if $active >= $max-clients;
         note "[INFO] New Victim on $addr ({++⚛$active}/$max-clients)";
-	
+        
         whenever Supply.interval($delay) {
             await $conn.print: (^2**64).pick.base(16) ~ "\r\n";
             LAST  { note "[INFO] Victim released after {(now - $start).fmt('%.2f')}s ({--⚛$active}/$max-clients)" }
